@@ -25,7 +25,7 @@ dependencies {
     implementation(gradleApi())
     implementation(kotlin("stdlib-jdk8"))
     implementation(kotlin("gradle-plugin"))
-    implementation("org.ow2.asm:asm:9.4")
+    implementation("org.ow2.asm:asm:9.5")
 
     testImplementation(kotlin("test"))
     testImplementation(kotlin("test-junit"))
