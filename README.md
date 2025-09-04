@@ -68,12 +68,19 @@ buildscript {
 
     dependencies {
         classpath 'org.noear:solon-gradle-plugin:x.y.z'
+      
+        // 需要用 native-image 的使用此插件
+        // classpath 'org.noear:solon-native-gradle-plugin:x.y.z'
     }
 }
 
 
 // 使用
 apply plugin: 'org.noear.solon'
+
+// 导入的是 org.noear:solon-native-gradle-plugin 使用
+// apply plugin: 'org.noear.solon.native'
+
 
 
 compileJava {
@@ -112,11 +119,13 @@ buildscript {
 
     dependencies {
         classpath("org.noear:solon-gradle-plugin:x.y.z")
+        // classpath("org.noear:solon-native-gradle-plugin:x.y.z")
     }
 }
 
 // 引用插件
 apply(plugin = "org.noear.solon")
+// apply(plugin = "org.noear.solon.native")
 
 // 统一配置
 extensions.configure(org.noear.solon.gradle.dsl.SolonExtension::class.java) {
@@ -137,7 +146,8 @@ tasks.withType<org.noear.solon.gradle.tasks.bundling.SolonWar> {
 #### 2. 构建打包
 
 * `gradle solonJar`
-* `gradle solonWar`
+* ~~`gradle solonWar`~~
+* `gradle nativeCompile`
 
 #### 3. 更新
 * `0.0.2` 
@@ -183,4 +193,5 @@ tasks.withType<org.noear.solon.gradle.tasks.bundling.SolonWar> {
     }
     ```
   
-    
+**Thanks**
+- [SpringBoot-gradle-plugin](https://github.com/spring-projects/spring-boot/tree/main/build-plugin/spring-boot-gradle-plugin)

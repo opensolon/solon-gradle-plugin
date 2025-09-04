@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2022 the original author or authors.
+ * Copyright 2012-present the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,31 +24,33 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.*;
 import org.gradle.work.DisableCachingByDefault;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.noear.solon.gradle.tools.MainClassFinder;
-import org.noear.solon.gradle.util.IoUtils;
+import org.noear.solon.gradle.util.Assert;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * {@link Task} for resolving the name of the application's main class.
  *
  * @author Andy Wilkinson
- * @since 2.4
  */
 @DisableCachingByDefault(because = "Not worth caching")
 public class ResolveMainClassName extends DefaultTask {
 
     private static final String SOLON_APPLICATION_CLASS_NAME = "org.noear.solon.annotation.SolonMain";
 
-
     private final RegularFileProperty outputFile;
 
     private final Property<String> configuredMainClass;
 
-    private FileCollection classpath;
+    private @Nullable FileCollection classpath;
 
     /**
      * Creates a new instance of the {@code ResolveMainClassName} task.
@@ -66,6 +68,7 @@ public class ResolveMainClassName extends DefaultTask {
      */
     @Classpath
     public FileCollection getClasspath() {
+        Assert.state(this.classpath != null, "'classpath' must not be null");
         return this.classpath;
     }
 
@@ -83,7 +86,6 @@ public class ResolveMainClassName extends DefaultTask {
      * The given {@code classpath} is evaluated as per {@link Project#files(Object...)}.
      *
      * @param classpath the classpath
-     * @since 2.5.10
      */
     public void setClasspath(Object classpath) {
         this.classpath = getProject().files(classpath);
@@ -117,8 +119,8 @@ public class ResolveMainClassName extends DefaultTask {
         File outputFile = this.outputFile.getAsFile().get();
         outputFile.getParentFile().mkdirs();
         String mainClassName = resolveMainClassName();
-
-        IoUtils.writeString(outputFile, mainClassName);
+        Files.writeString(outputFile.toPath(), mainClassName, StandardOpenOption.WRITE, StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING);
     }
 
     private String resolveMainClassName() {
@@ -126,11 +128,16 @@ public class ResolveMainClassName extends DefaultTask {
         if (configuredMainClass != null) {
             return configuredMainClass;
         }
-        return getClasspath().filter(File::isDirectory).getFiles().stream().map(this::findMainClass)
-                .filter(Objects::nonNull).findFirst().orElse("");
+        return getClasspath().filter(File::isDirectory)
+                .getFiles()
+                .stream()
+                .map(this::findMainClass)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse("");
     }
 
-    private String findMainClass(File file) {
+    private @Nullable String findMainClass(File file) {
         try {
             return MainClassFinder.findSingleMainClass(file, SOLON_APPLICATION_CLASS_NAME);
         } catch (IOException ex) {
@@ -139,20 +146,32 @@ public class ResolveMainClassName extends DefaultTask {
     }
 
     Provider<String> readMainClassName() {
-        return this.outputFile.map(new ClassNameReader());
+        String classpath = getClasspath().filter(File::isDirectory)
+                .getFiles()
+                .stream()
+                .map(File::getAbsolutePath)
+                .collect(Collectors.joining(File.pathSeparator));
+        return this.outputFile.map(new ClassNameReader(classpath));
     }
 
     private static final class ClassNameReader implements Transformer<String, RegularFile> {
 
-        @NotNull
+        private final String classpath;
+
+        private ClassNameReader(String classpath) {
+            this.classpath = classpath;
+        }
+
         @Override
         public String transform(RegularFile file) {
             if (file.getAsFile().length() == 0) {
-                throw new InvalidUserDataException("Main class name has not been configured and it could not be resolved");
+                throw new InvalidUserDataException(
+                        "Main class name has not been configured and it could not be resolved from classpath "
+                                + this.classpath);
             }
-            File output = file.getAsFile();
+            Path output = file.getAsFile().toPath();
             try {
-                return IoUtils.readString(output);
+                return Files.readString(output);
             } catch (IOException ex) {
                 throw new RuntimeException("Failed to read main class name from '" + output + "'");
             }
