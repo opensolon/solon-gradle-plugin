@@ -16,8 +16,15 @@
 
 package org.noear.solon.gradle.tasks.bundling;
 
+import org.gradle.api.file.CopySpec;
+import org.gradle.api.file.FileCopyDetails;
 import org.gradle.api.java.archives.Attributes;
 import org.gradle.api.java.archives.Manifest;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Support class for implementations of {@link SolonArchive}.
@@ -28,6 +35,8 @@ import org.gradle.api.java.archives.Manifest;
  * @see
  */
 class SolonArchiveSupport {
+
+    private static final byte[] ZIP_FILE_HEADER = new byte[]{'P', 'K', 3, 4};
     private static final String UNSPECIFIED_VERSION = "unspecified";
 
     SolonArchiveSupport() {
@@ -54,4 +63,30 @@ class SolonArchiveSupport {
         return (version != null) ? version : "unknown";
     }
 
+    boolean isZip(File file) {
+        try {
+            try (FileInputStream fileInputStream = new FileInputStream(file)) {
+                return isZip(fileInputStream);
+            }
+        } catch (IOException ex) {
+            return false;
+        }
+    }
+
+    private boolean isZip(InputStream inputStream) throws IOException {
+        for (byte headerByte : ZIP_FILE_HEADER) {
+            if (inputStream.read() != headerByte) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    void moveModuleInfoToRoot(CopySpec spec) {
+        spec.filesMatching("module-info.class", this::moveToRoot);
+    }
+
+    void moveToRoot(FileCopyDetails details) {
+        details.setRelativePath(details.getRelativeSourcePath());
+    }
 }

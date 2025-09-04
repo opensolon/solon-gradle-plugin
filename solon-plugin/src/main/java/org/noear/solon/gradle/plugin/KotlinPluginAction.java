@@ -19,6 +19,7 @@ package org.noear.solon.gradle.plugin;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.ExtraPropertiesExtension;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.kotlin.gradle.plugin.KotlinPluginWrapper;
 import org.jetbrains.kotlin.gradle.plugin.KotlinPluginWrapperKt;
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile;
@@ -33,13 +34,18 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile;
 class KotlinPluginAction implements PluginApplicationAction {
 
     @Override
-    public void execute(Project project) {
+    public void execute(@NotNull Project project) {
+        configureKotlinVersionProperty(project);
+        enableJavaParametersOption(project);
+        repairDamageToAotCompileConfigurations(project);
+    }
+
+    private void configureKotlinVersionProperty(Project project) {
         ExtraPropertiesExtension extraProperties = project.getExtensions().getExtraProperties();
         if (!extraProperties.has("kotlin.version")) {
             String kotlinVersion = getKotlinVersion(project);
             extraProperties.set("kotlin.version", kotlinVersion);
         }
-        enableJavaParametersOption(project);
     }
 
     private String getKotlinVersion(Project project) {
@@ -47,8 +53,16 @@ class KotlinPluginAction implements PluginApplicationAction {
     }
 
     private void enableJavaParametersOption(Project project) {
-        project.getTasks().withType(KotlinCompile.class)
-                .configureEach((compile) -> compile.getKotlinOptions().setJavaParameters(true));
+        project.getTasks()
+                .withType(KotlinCompile.class)
+                .configureEach((compile) -> compile.getCompilerOptions().getJavaParameters().set(true));
+    }
+
+    private void repairDamageToAotCompileConfigurations(Project project) {
+        SolonAotPlugin aotPlugin = project.getPlugins().findPlugin(SolonAotPlugin.class);
+        if (aotPlugin != null) {
+            aotPlugin.repairKotlinPluginDamage(project);
+        }
     }
 
     @Override

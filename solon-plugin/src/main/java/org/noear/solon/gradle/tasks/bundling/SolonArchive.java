@@ -19,14 +19,18 @@ package org.noear.solon.gradle.tasks.bundling;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Optional;
 
+import java.util.Set;
+
 /**
- * A Spring Boot "fat" archive task.
+ * A Solon "fat" archive task.
  *
  * @author Andy Wilkinson
  */
@@ -83,4 +87,12 @@ public interface SolonArchive extends Task {
     @Optional
     Property<JavaVersion> getTargetJavaVersion();
 
+    /**
+     * Registers the given lazily provided {@code resolvedArtifacts}. They are used to map
+     * from the files in the {@link #getClasspath classpath} to their dependency
+     * coordinates.
+     *
+     * @param resolvedArtifacts the lazily provided resolved artifacts
+     */
+    void resolvedArtifacts(Provider<Set<ResolvedArtifactResult>> resolvedArtifacts);
 }

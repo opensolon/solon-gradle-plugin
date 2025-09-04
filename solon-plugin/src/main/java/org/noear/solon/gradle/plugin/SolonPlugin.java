@@ -19,6 +19,21 @@ public class SolonPlugin implements Plugin<Project> {
 
     public static final String SOLON_ARCHIVES_CONFIGURATION_NAME = "solonArchives";
 
+    static final String SOLON_RUN_TASK_NAME = "solonRun";
+
+    static final String SOLON_TEST_RUN_TASK_NAME = "solonTestRun";
+
+
+    /**
+     * The name of the {@code developmentOnly} configuration.
+     */
+    public static final String DEVELOPMENT_ONLY_CONFIGURATION_NAME = "developmentOnly";
+
+    /**
+     * The name of the {@code testAndDevelopmentOnly} configuration.
+     */
+    public static final String TEST_AND_DEVELOPMENT_ONLY_CONFIGURATION_NAME = "testAndDevelopmentOnly";
+
     /**
      * The name of the {@link ResolveMainClassName} task.
      */
@@ -55,12 +70,15 @@ public class SolonPlugin implements Plugin<Project> {
 
     private void registerPluginActions(Project project, Configuration configuration) {
         SinglePublishedArtifact artifact = new SinglePublishedArtifact(configuration, project.getArtifacts());
-
-        List<PluginApplicationAction> actions = Arrays.asList(new JavaPluginAction(artifact), new WarPluginAction(artifact), new KotlinPluginAction());
+        List<PluginApplicationAction> actions = createPluginActions(artifact);
 
         for (PluginApplicationAction action : actions) {
             withPluginClassOfAction(action, (pluginClass) -> project.getPlugins().withType(pluginClass, (plugin) -> action.execute(project)));
         }
+    }
+
+    protected List<PluginApplicationAction> createPluginActions(SinglePublishedArtifact artifact) {
+        return Arrays.asList(new JavaPluginAction(artifact), new WarPluginAction(artifact), new KotlinPluginAction());
     }
 
     private void withPluginClassOfAction(PluginApplicationAction action,
