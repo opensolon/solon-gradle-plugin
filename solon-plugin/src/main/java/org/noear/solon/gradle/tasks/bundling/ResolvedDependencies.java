@@ -26,6 +26,7 @@ import org.gradle.api.tasks.Input;
 
 import java.io.File;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Maps from {@link File} to {@link ComponentArtifactIdentifier}.
@@ -60,9 +61,9 @@ class ResolvedDependencies {
 
     void resolvedArtifacts(Provider<Set<ResolvedArtifactResult>> resolvedArtifacts) {
         this.artifactFiles.addAll(
-                resolvedArtifacts.map((artifacts) -> artifacts.stream().map(ResolvedArtifactResult::getFile).toList()));
+                resolvedArtifacts.map((artifacts) -> artifacts.stream().map(ResolvedArtifactResult::getFile).collect(Collectors.toList())));
         this.artifactIds.addAll(
-                resolvedArtifacts.map((artifacts) -> artifacts.stream().map(ResolvedArtifactResult::getId).toList()));
+                resolvedArtifacts.map((artifacts) -> artifacts.stream().map(ResolvedArtifactResult::getId).collect(Collectors.toList())));
     }
 
 }

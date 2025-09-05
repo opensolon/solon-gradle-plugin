@@ -59,7 +59,7 @@ mavenPublishing {
         name.set("Solon Gradle Plugin")
         description.set(project.description)
         inceptionYear.set("2023")
-        url.set("https://gitee.com/noear/solon")
+        url.set("https://gitee.com/opensolon/solon")
         licenses {
             license {
                 name.set("The Apache License, Version 2.0")
@@ -71,13 +71,13 @@ mavenPublishing {
             developer {
                 id.set("noear")
                 name.set("noear")
-                url.set("https://gitee.com/noear")
+                url.set("https://gitee.com/opensolon")
             }
         }
         scm {
-            url.set("https://gitee.com/noear/solon")
-            connection.set("scm:git:git@gitee.com:noear/solon.git")
-            developerConnection.set("scm:git:ssh://git@gitee.com:noear/solon.git")
+            url.set("https://gitee.com/opensolon/solon")
+            connection.set("scm:git:git@gitee.com:opensolon/solon.git")
+            developerConnection.set("scm:git:ssh://git@gitee.com:opensolon/solon.git")
         }
     }
 }
